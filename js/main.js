@@ -2,6 +2,7 @@
 
 
 
+
 var err;
 var getData = undefined;
 var isSlided = false;
