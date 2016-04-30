@@ -1,5 +1,6 @@
 ///доделать класс Post. Не все зн используются. Надо добавить atachmentImages. И сделать разбор принятыых данных где есть картинки и текст
 
+
 var err;
 var getData = undefined;
 var isSlided = false;
