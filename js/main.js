@@ -67,13 +67,17 @@ $(window).ready(function () {
 
 
 function getPosts(_count,offset) {
-  var count = _count > 100 ? count = 100 : count = _count;
+  var count;
+  if(_count > )
+  {
+    
+  }
+ 
   
   VK.api('wall.get', { 'count': count,"offset":offset}, function (data) {
 
     console.log(data.response);
-    countOfAllPosts = data.response.count;
-    displayedPosts += _count;
+   
     
     $('#postCount').html("All posts: "+countOfAllPosts);
     $('#postCountDislpayed').html("On screen "+displayedPosts);
@@ -196,8 +200,12 @@ function varInit() {
 
 function onOkInit() {
   varInit();
+  
   getUserId();
-
+  VK.api('wall.get', {}, function (data) {
+   countOfAllPosts = data.response['0'];
+  });
+  
 }
 
 function onFaildInit() {
