@@ -1,8 +1,4 @@
 ///доделать класс Post. Не все зн используются. Надо добавить atachmentImages. И сделать разбор принятыых данных где есть картинки и текст
-
-
-
-
 var err;
 var getData = undefined;
 var isSlided = false;
@@ -13,10 +9,14 @@ var link = "";
 var typeOfPost;
 var elementContent;
 var allPosts = new Array();
+var idOfCurrentUser = undefined;    //id пользователя
+var countOfAllPosts= 0;
+var displayedPosts = 0;
 
-function Post(image, _postType, postId, postText) {
+function Post(image, _postType, postId, postText, _isRepost) {
   this.img = image;
   this.imgDir = "imgs/";
+  this.isRepost = _isRepost;
   this.getCssImg = function () {
     if (this.postType == undefined) {
       var str = "url(" + this.imgDir + this.img + ")";
@@ -44,27 +44,40 @@ function Post(image, _postType, postId, postText) {
 
 //////////////////////////Win_Load//////////////////////////////
 $(window).ready(function () {
+  VK.init(onOkInit(), onFaildInit(), '5.52');
 
-  varInit();
 
   $('#btn').click(function () {
     menuSlide(20);
   });
 
   $('#start').click(function () {
-    getPosts(30);
+    clearScr();
+    if(isNaN($("#count").val()) != true && isNaN($("#offset").val()) != true){
+        var count = $("#count").val();
+        var offset = $("#offset").val();
+        getPosts(count,offset);
+    }else alert("Input Number");
+    
+   // 
   });
 
 });
 ///////////////////////////////////////////////////////////////
 
 
-function getPosts(_count) {
+function getPosts(_count,offset) {
   var count = _count > 100 ? count = 100 : count = _count;
+  
+  VK.api('wall.get', { 'count': count,"offset":offset}, function (data) {
 
-  VK.api('wall.get', { 'count': count }, function (data) {
+    console.log(data.response);
+    countOfAllPosts = data.response.count;
+    displayedPosts += _count;
+    
+    $('#postCount').html("All posts: "+countOfAllPosts);
+    $('#postCountDislpayed').html("On screen "+displayedPosts);
     getData = data.response.items;
-    console.log(getData);
     getData.forEach(function (element, i, getData) {
 
       var typeOfPost = undefined; //тип поста(текст видео картинка)
@@ -74,37 +87,61 @@ function getPosts(_count) {
       var post = undefined;
       var postId = element.id; // id posta
       var atachCount = undefined;
+      var isRepost = false;
 
       try {       //обработка Своих Записей.
         typeOfPost = element.attachments['0'].type;
         elementContent = element.attachments['0'];
-        atachCount = element.attachments.length;        
+        if (element.attachments.length != undefined) atachCount = element.attachments.length;
         switch (typeOfPost) {
           case 'video': link = elementContent.video.photo_130; break;
           case 'photo': link = elementContent.photo.photo_130; break;
+          case 'doc': link = "imgs/doc.png";
         }
       } catch (error) { // Если пост является репостом или текстом
         try {
-          var elementRoot = element.copy_history['0'].atachments['0'];
-          typeOfPost = elementRoot.type;
 
+          var elementRoot = element.copy_history['0'].attachments['0'];
+
+          typeOfPost = elementRoot.type;
           switch (typeOfPost) {
             case 'video': link = elementRoot.video.photo_130; break;
             case 'photo': link = elementRoot.photo.photo_130; break;
-          }
-        atachCount = element.copy_history['0'].atachments.length;        
+            case 'doc': link = "imgs/doc.png";
 
+          }
+          isRepost = true;
+          //if(element.copy_history['0'].atachments.length != undefined) atachCount = element.copy_history['0'].atachments.length;
         } catch (error) {
           link = "txt.png";
-
+          console.log(error);
         }
       }
 
-      post = new Post(link, typeOfPost, postId, text);
-    
+      post = new Post(link, typeOfPost, postId, text,isRepost);
       allPosts.push(post);
       createPost(post);
-  console.log(post.postType + " " + post.getCssImg() + " " + post.id + " " + atachCount);
+      // console.log(post.postType + " " + post.getCssImg() + " " + post.id + " " + atachCount);
+      if (i == getData.length - 1) {
+       //при последенем элементе задаем всем собития клика
+        $('.post').on('click', function () {
+          window.open("http://vk.com/id" + idOfCurrentUser + "?w=wall" + idOfCurrentUser + '_' + this.getAttribute('id'), '_blank');});
+        $(".post").on("contextmenu", function (event) {
+        var postId = parseInt($(this).attr("id"));
+          $('altmenu').hide();
+          $('altmenu').css({"left":event.clientX,"top":event.clientY});
+          $('#type').html("Type : "+ $(this).attr("typeofpost"));
+          $('#repost').html("Repost? : "+ $(this).attr("isrepost"));
+          $('altmenu').show(200);
+          $(".element").unbind();
+          $(".element").on('click', function () {
+            $('altmenu').hide();
+          });
+        });
+        $('body').on('mousedown',function () {
+          $('altmenu').hide();
+        });
+      }
     });
 
   });
@@ -113,10 +150,20 @@ function getPosts(_count) {
 
 
 function createPost(_Post) {
-  var createdPost = $('<div>').appendTo('#postContent').attr({ "class": "post", "id": _Post.id });
+  var createdPost = $('<div>').appendTo('#postContent').attr({ "class": "post", "id": _Post.id,"typeOfPost":_Post.postType,"isRepost": _Post.isRepost});
   createdPost.css("background-image", _Post.getCssImg().toString());
+  var postChild = $("<div>").appendTo(createdPost).attr({"id":"num"});
+  postChild.html(_Post.id);
+
 
 }
+function clearScr() {
+  $('.post').remove();
+  allPosts = new Array();
+  countOfAllPosts = 0;
+  displayedPosts = 0;
+}
+
 function menuSlide(maxSlide) {
   isSlided = !isSlided;
   if (!isSlided) {
@@ -139,15 +186,31 @@ function menuSlide(maxSlide) {
 }
 
 function varInit() {
-  VK.init(function () { onOkInit(); }, function () { onFaildInit(); }, '5.52');
+
   realMenuSize = ($('#leftMenu').width() / docWidth) * 100; //получаем ширину в процентах
   menuSlide(20);
+  $('#offset').val("offset");
+  $('#count').val("count");
+  
 }
 
 function onOkInit() {
+  varInit();
+  getUserId();
 
 }
 
 function onFaildInit() {
 
+}
+
+function getUserId() {
+  VK.api('users.get', function (data) {
+    if (data.response != undefined) {
+      idOfCurrentUser = data.response['0'].uid;
+    }
+    else {
+      getUserId();
+    }
+  });
 }

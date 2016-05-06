@@ -12,6 +12,7 @@ body{
 	width:90%;
 	height: 90%;
 	float: right;
+	overflow: auto;
 }
 #leftMenu{
 	background: blue;
@@ -23,13 +24,59 @@ body{
 	float : right;
 }
 .post{
-	
+	border-radius:10px;
 	background-size: cover;
-	width: 72px;
-	height: 72px;
+	width: 70px;
+	height: 70px;
 	float: left;
-	margin-left: 1%;
+	margin-left: 2%;
     margin-top: 1%;
     margin-right: 1%;
-    margin-bottom: 1%
+    margin-bottom: 2%;
+	border: 2px solid rgba(255, 255, 0, 0.62);
+	
+}
+.post:hover{
+	border: 2px solid blue;
+}
+.post:active{	
+	border: 2px solid orangered;
+}
+#num{
+	color: yellow;
+    margin-top: 55px;
+    margin-left: 25px;
+    border-radius: 5px;
+    background: darkcyan;
+	position: relative;
+    float: inherit;
+}
+
+altmenu{
+	width: 125;
+    height: 200;
+	background: rgba(255, 77, 22, 1);
+    position: absolute;
+    border: 2px solid;
+	display: none;
+}
+
+.element{
+    width: initial;
+    text-align: center
+}
+.element:hover{
+	background: beige;
+}
+
+.input{
+	float: right;
+    margin-right: 20px;
+    width: 6%;
+	text-align: center;
+	border-radius:10px;
+}
+#start{
+	float: right;
+    margin-right: 20;
 }
