@@ -8,7 +8,8 @@ var docWidth = 800;
 var link = "";
 var typeOfPost;
 var elementContent;
-var allPosts = new Array();
+var sortedPosts = new Array();
+var rawGetData = new Array();
 var idOfCurrentUser = undefined;    //id пользователя
 var countOfAllPosts= 0;
 var displayedPosts = 0;
@@ -53,27 +54,52 @@ $(window).ready(function () {
 
   $('#start').click(function () {
     clearScr();
-    if(isNaN($("#count").val()) != true && isNaN($("#offset").val()) != true){
-        var count = $("#count").val();
-        var offset = $("#offset").val();
-        getPosts(count,offset);
-    }else alert("Input Number");
+    if (isNaN($("#count").val()) != true) if(isNaN($("#offset").val()) != true) {}
+      var count = $("#count").val();
+      
+    } else {
+      $("#count").val(20)
+      $("#offset").val(0);
+    }
     
+    
+       if(count >= 100)
+        getAllPosts(count,offset);
+        else
+        getPosts(count,offset);
+
    // 
   });
 
 });
 ///////////////////////////////////////////////////////////////
-
+function getAllPosts(_count,_offset) {
+  var countInTimer =0;
+  var getCount = _count < 0? -_count:_count;
+  _count < 0? _count *= -1:_count = _count;
+  getCount > countOfAllPosts ? getCount = countOfAllPosts:getCount;
+  getCount > 100 ? countInTimer = 100:countInTimer = getCount;
+  
+  
+  var offset = _offset;
+  var iteration = Math.ceil(getCount / 100) -1;
+  setTimeout(function _get() {
+    if (getCount >= 100) { getCount = Math.abs(getCount - 100);} else { countInTimer = getCount; }
+    VK.api('wall.get', { 'count': countInTimer, "offset": offset }, function (data) {
+      offset = parseInt(offset) + 100;
+      rawGetData.push(data.response.items);
+      console.log(rawGetData);
+      console.log(iteration);
+      if (iteration > 0) {
+        setTimeout(_get, 500);
+        iteration--;
+      }
+    });
+  }, 500);
+}
 
 function getPosts(_count,offset) {
-  var count;
-  if(_count > )
-  {
-    
-  }
- 
-  
+  var count = _count > 100 ? count = 100:count = _count;  
   VK.api('wall.get', { 'count': count,"offset":offset}, function (data) {
 
     console.log(data.response);
@@ -123,7 +149,7 @@ function getPosts(_count,offset) {
       }
 
       post = new Post(link, typeOfPost, postId, text,isRepost);
-      allPosts.push(post);
+      sortedPosts.push(post);
       createPost(post);
       // console.log(post.postType + " " + post.getCssImg() + " " + post.id + " " + atachCount);
       if (i == getData.length - 1) {
@@ -163,8 +189,9 @@ function createPost(_Post) {
 }
 function clearScr() {
   $('.post').remove();
-  allPosts = new Array();
-  countOfAllPosts = 0;
+  sortedPosts = new Array();
+  rawGetData = new Array();
+ // countOfAllPosts = 0;
   displayedPosts = 0;
 }
 
