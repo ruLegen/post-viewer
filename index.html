@@ -16,15 +16,22 @@
 			<div id="status-line">
 				<label class="status" id="postCount"></label></br>
 				<label class="status" id="postCountDislpayed"></label>
-				<input class="input" id="offset"> 
-				<input class="input" id="count"> 
-				<button id="start" value="">Get</button>
+				<input class="input" id="idOfUSer" tabindex="3"> 
+				<input class="input" id="offset" tabindex="2"> 
+				<input class="input" id="count" tabindex="1"> 
+				<button id="start" value="" tabindex="4">Get</button>
 			</div>
 		</div>
 		<div id="leftMenu">
 			<button id="btn" value="sadasd">Expand</button>
 		</div>
-		<div id="postContent"></div>
+		<div id="postContent">
+			<div id="wait" style="display:none">
+				<meter></meter>
+			</div>
+			<div id="Posts"></div>
+			
+		</div>
 		<altmenu>
 			<div class="element" id="type"></div>
 			<div class="element" id="repost"></div>

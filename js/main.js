@@ -1,5 +1,6 @@
 ///доделать класс Post. Не все зн используются. Надо добавить atachmentImages. И сделать разбор принятыых данных где есть картинки и текст
 var err;
+var ownerId;    //id хозяина приложения  
 var getData = undefined;
 var isSlided = false;
 var timeMenuSlide = 150;
@@ -54,26 +55,25 @@ $(window).ready(function () {
 
   $('#start').click(function () {
     clearScr();
-    if (isNaN($("#count").val()) != true) if(isNaN($("#offset").val()) != true) {}
-      var count = $("#count").val();
-      
-    } else {
-      $("#count").val(20)
-      $("#offset").val(0);
-    }
+    if (isNaN($("#count").val()) != true) var count = $("#count").val();   else {count = 20;$("#count").val(20)};
+    if (isNaN($("#offset").val()) != true) var offset = $("#offset").val(); else {offset = 0;$("#offset").val(0)};
+    count < 0? count = -count:count = count;
+    offset < 0? offset = -offset:offset = offset;
+    if (isNaN($("#idOfUSer").val()) != true) idOfCurrentUser = $("#idOfUSer").val(); else {idOfCurrentUser = ownerId;$("#idOfUSer").val("me");};
     
-    
-       if(count >= 100)
-        getAllPosts(count,offset);
-        else
-        getPosts(count,offset);
+    getAllPosts(count, offset,idOfCurrentUser);
+       
 
    // 
   });
 
 });
 ///////////////////////////////////////////////////////////////
-function getAllPosts(_count,_offset) {
+function getAllPosts(_count,_offset,_id) {
+  getCountOfPosts(_id);
+  $('#wait').css("background-image","url('imgs/wait.gif')");
+  $('#wait').show();
+  
   var countInTimer =0;
   var getCount = _count < 0? -_count:_count;
   _count < 0? _count *= -1:_count = _count;
@@ -85,7 +85,7 @@ function getAllPosts(_count,_offset) {
   var iteration = Math.ceil(getCount / 100) -1;
   setTimeout(function _get() {
     if (getCount >= 100) { getCount = Math.abs(getCount - 100);} else { countInTimer = getCount; }
-    VK.api('wall.get', { 'count': countInTimer, "offset": offset }, function (data) {
+    VK.api('wall.get', { 'owner_id':_id,'count': countInTimer, "offset": offset }, function (data) {
       offset = parseInt(offset) + 100;
       rawGetData.push(data.response.items);
       console.log(rawGetData);
@@ -94,31 +94,25 @@ function getAllPosts(_count,_offset) {
         setTimeout(_get, 500);
         iteration--;
       }
+      if(iteration == 0) {displayPosts(rawGetData);$('#wait').hide();}
     });
   }, 500);
 }
 
-function getPosts(_count,offset) {
-<<<<<<< HEAD
-  var count = _count > 100 ? count = 100:count = _count;  
-=======
-  var count;
-  if(_count > )
-  {
-    
-  }
- 
-  
->>>>>>> 830b941758675eea8457c6cb553f41e07ceed7fc
-  VK.api('wall.get', { 'count': count,"offset":offset}, function (data) {
+function displayPosts(rawData) {
+  var t_data = Array.from(rawData);
+  console.log(typeof(t_data));
+  var data = new Array;
+ t_data.forEach(function(item,i,t_data) {
+    item.forEach(function(item,i,t_data) {
+      data.push(item);
+    });
+  });
 
-    console.log(data.response);
-   
-    
-    $('#postCount').html("All posts: "+countOfAllPosts);
+    $('#postCount').html("All posts: "+countOfAllPosts);    
     $('#postCountDislpayed').html("On screen "+displayedPosts);
-    getData = data.response.items;
-    getData.forEach(function (element, i, getData) {
+    
+    data.forEach(function (element, i, data) {
 
       var typeOfPost = undefined; //тип поста(текст видео картинка)
       var elementContent;
@@ -162,10 +156,15 @@ function getPosts(_count,offset) {
       sortedPosts.push(post);
       createPost(post);
       // console.log(post.postType + " " + post.getCssImg() + " " + post.id + " " + atachCount);
-      if (i == getData.length - 1) {
+      if (i == data.length - 1) {
        //при последенем элементе задаем всем собития клика
         $('.post').on('click', function () {
-          window.open("http://vk.com/id" + idOfCurrentUser + "?w=wall" + idOfCurrentUser + '_' + this.getAttribute('id'), '_blank');});
+          if(idOfCurrentUser > 0)
+          var openLink =  "http://vk.com/id" + idOfCurrentUser + "?w=wall" + idOfCurrentUser + '_' + this.getAttribute('id');
+          else
+          var openLink = "http://vk.com/wall"+idOfCurrentUser+"?own=1&w=wall"+idOfCurrentUser+"_" + this.getAttribute('id');
+          window.open(openLink, '_blank');
+          });
         $(".post").on("contextmenu", function (event) {
         var postId = parseInt($(this).attr("id"));
           $('altmenu').hide();
@@ -182,15 +181,18 @@ function getPosts(_count,offset) {
           $('altmenu').hide();
         });
       }
+      
+      if(i % 100 == 0)
+      {
+        setTimeout(function() {},1090);
+      }
     });
-
-  });
 }
 
 
 
 function createPost(_Post) {
-  var createdPost = $('<div>').appendTo('#postContent').attr({ "class": "post", "id": _Post.id,"typeOfPost":_Post.postType,"isRepost": _Post.isRepost});
+  var createdPost = $('<div>').appendTo('#Posts').attr({ "class": "post", "id": _Post.id,"typeOfPost":_Post.postType,"isRepost": _Post.isRepost});
   createdPost.css("background-image", _Post.getCssImg().toString());
   var postChild = $("<div>").appendTo(createdPost).attr({"id":"num"});
   postChild.html(_Post.id);
@@ -201,7 +203,6 @@ function clearScr() {
   $('.post').remove();
   sortedPosts = new Array();
   rawGetData = new Array();
- // countOfAllPosts = 0;
   displayedPosts = 0;
 }
 
@@ -230,29 +231,44 @@ function varInit() {
 
   realMenuSize = ($('#leftMenu').width() / docWidth) * 100; //получаем ширину в процентах
   menuSlide(20);
+  $('#postCount').html("All posts: "+countOfAllPosts);
   $('#offset').val("offset");
   $('#count').val("count");
+  $('#idOfUSer').val("user's id");
+  
   
 }
 
 function onOkInit() {
   varInit();
-  
+ getCountOfPosts('');
   getUserId();
-  VK.api('wall.get', {}, function (data) {
-   countOfAllPosts = data.response['0'];
-  });
-  
+
 }
 
 function onFaildInit() {
 
 }
 
+function getCountOfPosts(_id) {
+    VK.api('wall.get', {"owner_id":_id}, function (data) {
+   try{
+     countOfAllPosts = data.response.count;
+   }
+   catch(error)
+   {
+     countOfAllPosts = data.response['0'];
+   //console.log(data);      
+   }
+  });
+  
+}
+
 function getUserId() {
   VK.api('users.get', function (data) {
     if (data.response != undefined) {
       idOfCurrentUser = data.response['0'].uid;
+      ownerId = idOfCurrentUser;
     }
     else {
       getUserId();

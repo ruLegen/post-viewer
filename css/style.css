@@ -76,10 +76,22 @@ altmenu{
 	text-align: center;
 	border-radius:10px;
 }
+#idOfUser{
+	width:12%;
+}
 #start{
 	float: right;
     margin-right: 20;
 }
 .status{
+	
+}
+#Posts{
+	 
+}
+#wait{
+	width : inherit;
+	height: inherit;
+	background-size: cover;
 	
 }
