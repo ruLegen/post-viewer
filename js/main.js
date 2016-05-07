@@ -99,7 +99,17 @@ function getAllPosts(_count,_offset) {
 }
 
 function getPosts(_count,offset) {
+<<<<<<< HEAD
   var count = _count > 100 ? count = 100:count = _count;  
+=======
+  var count;
+  if(_count > )
+  {
+    
+  }
+ 
+  
+>>>>>>> 830b941758675eea8457c6cb553f41e07ceed7fc
   VK.api('wall.get', { 'count': count,"offset":offset}, function (data) {
 
     console.log(data.response);
