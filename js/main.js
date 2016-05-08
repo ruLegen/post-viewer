@@ -47,32 +47,41 @@ function Post(image, _postType, postId, postText, _isRepost) {
 //////////////////////////Win_Load//////////////////////////////
 $(window).ready(function () {
   VK.init(onOkInit(), onFaildInit(), '5.52');
-
-
+ 
   $('#btn').click(function () {
     menuSlide(20);
   });
 
   $('#start').click(function () {
     clearScr();
-    if (isNaN($("#count").val()) != true) var count = $("#count").val();   else {count = 20;$("#count").val(20)};
-    if (isNaN($("#offset").val()) != true) var offset = $("#offset").val(); else {offset = 0;$("#offset").val(0)};
+    if (isNaN(parseInt($("#count").val())) != true) var count = parseInt($("#count").val());   else {count = 20;$("#count").val(20)};
+    if (isNaN(parseInt($("#offset").val())) != true) var offset = parseInt($("#offset").val()); else {offset = 0;$("#offset").val(0)};
     count < 0? count = -count:count = count;
     offset < 0? offset = -offset:offset = offset;
-    if (isNaN($("#idOfUSer").val()) != true) idOfCurrentUser = $("#idOfUSer").val(); else {idOfCurrentUser = ownerId;$("#idOfUSer").val("me");};
+    if (isNaN(parseInt($("#idOfUSer").val())) != true) idOfCurrentUser = parseInt($("#idOfUSer").val()); else {idOfCurrentUser = ownerId;$("#idOfUSer").val("me");};
+   
+    getCountOfPosts(idOfCurrentUser);
+    setTimeout(getAllPosts,200,count, offset,idOfCurrentUser)
+   
     
-    getAllPosts(count, offset,idOfCurrentUser);
-       
-
-   // 
   });
 
 });
 ///////////////////////////////////////////////////////////////
 function getAllPosts(_count,_offset,_id) {
-  getCountOfPosts(_id);
-  $('#wait').css("background-image","url('imgs/wait.gif')");
-  $('#wait').show();
+  
+  
+  if(err)
+  {
+   $('#wait').css("background-image","url('imgs/error.png')");
+   $('#wait').show();
+   err = false;
+   return false;
+  }
+  else{
+    $('#wait').css("background-image","url('imgs/wait.gif')");
+    $('#wait').show();
+  }
   
   var countInTimer =0;
   var getCount = _count < 0? -_count:_count;
@@ -130,7 +139,12 @@ function displayPosts(rawData) {
         switch (typeOfPost) {
           case 'video': link = elementContent.video.photo_130; break;
           case 'photo': link = elementContent.photo.photo_130; break;
-          case 'doc': link = "imgs/doc.png";
+          case 'doc': link = "imgs/doc.png";break;
+          case 'link': link =  elementContent.link.photo.photo_130;break;
+          case 'audio': link = "imgs/audio.png";break;
+          case 'note': link = "imgs/note.png";break;
+          case 'poll': link = "imgs/poll.png";break;
+          default:link = "imgs/unknow.png";break;
         }
       } catch (error) { // Если пост является репостом или текстом
         try {
@@ -141,14 +155,19 @@ function displayPosts(rawData) {
           switch (typeOfPost) {
             case 'video': link = elementRoot.video.photo_130; break;
             case 'photo': link = elementRoot.photo.photo_130; break;
-            case 'doc': link = "imgs/doc.png";
-
+            case 'doc': link = "imgs/doc.png";break;
+            case 'link': link = elementRoot.link.photo.photo_130; break;
+            case 'audio': link = "imgs/audio.png"; break;
+            case 'note': link = "imgs/note.png"; break;
+            case 'poll': link = "imgs/poll.png"; break;
+            default: link = "imgs/unknow.png"; break;
           }
           isRepost = true;
           //if(element.copy_history['0'].atachments.length != undefined) atachCount = element.copy_history['0'].atachments.length;
         } catch (error) {
+
           link = "txt.png";
-          console.log(error);
+          console.log(error);  // 2 le catch is no cool
         }
       }
 
@@ -166,26 +185,27 @@ function displayPosts(rawData) {
           window.open(openLink, '_blank');
           });
         $(".post").on("contextmenu", function (event) {
-        var postId = parseInt($(this).attr("id"));
-          $('altmenu').hide();
-          $('altmenu').css({"left":event.clientX,"top":event.clientY});
-          $('#type').html("Type : "+ $(this).attr("typeofpost"));
-          $('#repost').html("Repost? : "+ $(this).attr("isrepost"));
-          $('altmenu').show(200);
-          $(".element").unbind();
-          $(".element").on('click', function () {
-            $('altmenu').hide();
-          });
+        var x = event.clientX;
+        var y = event.clientY;
+        var postContentWidth = parseInt($('#postContent').css("width"));
+        var postContentLeft = $('#postContent').position().left;
+        
+        if(x > (postContentLeft + postContentWidth)/2)
+        {
+          showAltMenu(this,x - 75,y);
+        }
+          if(x < (postContentLeft + postContentWidth)/2)
+        {
+          showAltMenu(this,x,y);
+        }
+        console.log(x + "  " + y);
         });
-        $('body').on('mousedown',function () {
-          $('altmenu').hide();
-        });
-      }
       
       if(i % 100 == 0)
       {
         setTimeout(function() {},1090);
       }
+    }
     });
 }
 
@@ -235,8 +255,6 @@ function varInit() {
   $('#offset').val("offset");
   $('#count').val("count");
   $('#idOfUSer').val("user's id");
-  
-  
 }
 
 function onOkInit() {
@@ -251,15 +269,22 @@ function onFaildInit() {
 }
 
 function getCountOfPosts(_id) {
-    VK.api('wall.get', {"owner_id":_id}, function (data) {
-   try{
-     countOfAllPosts = data.response.count;
-   }
-   catch(error)
-   {
-     countOfAllPosts = data.response['0'];
-   //console.log(data);      
-   }
+  VK.api('wall.get', { "owner_id": _id }, function (data) {
+    try {
+      countOfAllPosts = data.response.count;
+    
+    }
+    catch (error) {
+      try {
+        countOfAllPosts = data.response['0'];
+      
+      }
+      catch (error) {
+        alert(data.error.error_msg);
+       err = true;
+      }
+      //console.log(data);      
+    }
   });
   
 }
@@ -274,4 +299,36 @@ function getUserId() {
       getUserId();
     }
   });
+}
+
+
+function changeIconSize(val) {
+  var t_val = parseInt(val);
+  t_val  = t_val <= 0? t_val = 1: t_val = t_val;
+  
+  var allposts = Array.from($('.post'));
+  
+  allposts.forEach(function(item,i,allposts) {
+    var thisWidth = parseInt($(item).css("width"));
+    var thisHeight = thisWidth;
+    
+    $(item).css({"width": t_val,"height":t_val});
+  });
+}
+
+function showAltMenu(item,x,y)
+{
+         var postId = parseInt($(item).attr("id"));
+          $('altmenu').hide();
+          $('altmenu').css({"left":x,"top":y});
+          $('#type').html("Type : "+ $(item).attr("typeofpost"));
+          $('#repost').html("Repost? : "+ $(item).attr("isrepost"));
+          $('altmenu').show(200);
+          $(".element").unbind();
+          $(".element").on('click', function () {
+            $('altmenu').hide();
+          });
+        $('body').on('mousedown',function () {
+          $('altmenu').hide();
+        });
 }
