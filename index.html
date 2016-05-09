@@ -21,12 +21,34 @@
 				<input class="input" id="offset" tabindex="2"> 
 				<input class="input" id="count" tabindex="1"> 
 				<button id="start" value="" tabindex="4">Get</button>
+				<div class="tabContent" id="tabs">
+					<div class="switchers">
+						<button class="toTab" value="1">Sort</button>
+						<button class="toTab" value="2">getID</button>						
+					</div>
+					<tab class="tab" id="tab1">
+						<label><input type="checkbox" id="photo" checked="checked"/>Photo </label>
+						<label><input type="checkbox" id="doc" checked="checked"/>Doc </label>
+						<label><input type="checkbox" id="video" checked="checked"/>Video </label>
+						<label><input type="checkbox" id="poll" checked="checked"/>Poll </label>
+						<label><input type="checkbox" id="text" checked="checked"/>Text </label>
+						<label><input type="checkbox" id="audio" checked="checked"/>Audio </label>
+					</tab>
+					<tab class="tab" id="tab2">
+						<label><input type="radio" name="typeOfSearch" value="user" checked="checked" />User  </label>
+						<label><input type="radio" name="typeOfSearch" value="public"/>Public  </label>
+						<input id="url" value="url" size="15"/>
+						<button id="getID" >Get ID</button>
+					</tab>
+					
+				</div>
+					
 			</div>
 		</div>
-		<div id="leftMenu">
+<!--		<div id="leftMenu">
 			<button id="btn" value="sadasd">Expand</button>
 			<div id="slider"></div>
-		</div>
+		</div> -->
 		<div id="postContent">
 			<div id="wait" style="display:none">
 				<meter></meter>

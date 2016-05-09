@@ -89,7 +89,7 @@ function getAllPosts(_count,_offset,_id) {
   getCount > countOfAllPosts ? getCount = countOfAllPosts:getCount;
   getCount > 100 ? countInTimer = 100:countInTimer = getCount;
   
-  
+  var once = false;
   var offset = _offset;
   var iteration = Math.ceil(getCount / 100) -1;
   setTimeout(function _get() {
@@ -103,110 +103,110 @@ function getAllPosts(_count,_offset,_id) {
         setTimeout(_get, 500);
         iteration--;
       }
-      if(iteration == 0) {displayPosts(rawGetData);$('#wait').hide();}
+      if(iteration == 0 && !once) {displayPosts(rawGetData);$('#wait').hide();once = true;}
     });
   }, 500);
 }
 
 function displayPosts(rawData) {
   var t_data = Array.from(rawData);
-  console.log(typeof(t_data));
+  console.log(typeof (t_data));
   var data = new Array;
- t_data.forEach(function(item,i,t_data) {
-    item.forEach(function(item,i,t_data) {
+  t_data.forEach(function (item, i, t_data) {
+    item.forEach(function (item, i, t_data) {
       data.push(item);
     });
   });
 
-    $('#postCount').html("All posts: "+countOfAllPosts);    
-    $('#postCountDislpayed').html("On screen "+displayedPosts);
-    
-    data.forEach(function (element, i, data) {
+  $('#postCount').html("All posts: " + countOfAllPosts);
+  data.forEach(function (element, i, data) {
 
-      var typeOfPost = undefined; //тип поста(текст видео картинка)
-      var elementContent;
-      var text; //текст поста
-      var atchImg = new Array(); //картинки если их больше 1
-      var post = undefined;
-      var postId = element.id; // id posta
-      var atachCount = undefined;
-      var isRepost = false;
+    var typeOfPost = "text"; //тип поста(текст видео картинка)
+    var elementContent;
+    var text; //текст поста
+    var atchImg = new Array(); //картинки если их больше 1
+    var post = undefined;
+    var postId = element.id; // id posta
+    var atachCount = undefined;
+    var isRepost = false;
+    var sortRules = getSortRules();
 
-      try {       //обработка Своих Записей.
-        typeOfPost = element.attachments['0'].type;
-        elementContent = element.attachments['0'];
-        if (element.attachments.length != undefined) atachCount = element.attachments.length;
-        switch (typeOfPost) {
-          case 'video': link = elementContent.video.photo_130; break;
-          case 'photo': link = elementContent.photo.photo_130; break;
-          case 'doc': link = "imgs/doc.png";break;
-          case 'link': link =  elementContent.link.photo.photo_130;break;
-          case 'audio': link = "imgs/audio.png";break;
-          case 'note': link = "imgs/note.png";break;
-          case 'poll': link = "imgs/poll.png";break;
-          default:link = "imgs/unknow.png";break;
-        }
-      } catch (error) { // Если пост является репостом или текстом
-        try {
-
-          var elementRoot = element.copy_history['0'].attachments['0'];
-
-          typeOfPost = elementRoot.type;
-          switch (typeOfPost) {
-            case 'video': link = elementRoot.video.photo_130; break;
-            case 'photo': link = elementRoot.photo.photo_130; break;
-            case 'doc': link = "imgs/doc.png";break;
-            case 'link': link = elementRoot.link.photo.photo_130; break;
-            case 'audio': link = "imgs/audio.png"; break;
-            case 'note': link = "imgs/note.png"; break;
-            case 'poll': link = "imgs/poll.png"; break;
-            default: link = "imgs/unknow.png"; break;
-          }
-          isRepost = true;
-          //if(element.copy_history['0'].atachments.length != undefined) atachCount = element.copy_history['0'].atachments.length;
-        } catch (error) {
-
-          link = "txt.png";
-          console.log(error);  // 2 le catch is no cool
-        }
+    try {       //обработка Своих Записей.
+      typeOfPost = element.attachments['0'].type;
+      elementContent = element.attachments['0'];
+      if (element.attachments.length != undefined) atachCount = element.attachments.length;
+      switch (typeOfPost) {
+        case 'video': link = elementContent.video.photo_130; break;
+        case 'photo': link = elementContent.photo.photo_130; break;
+        case 'doc': link = "imgs/doc.png"; break;
+        case 'link': link = elementContent.link.photo.photo_130; break;
+        case 'audio': link = "imgs/audio.png"; break;
+        case 'note': link = "imgs/note.png"; break;
+        case 'poll': link = "imgs/poll.png"; break;
+        default: link = "imgs/unknow.png"; break;
       }
+    } catch (error) { // Если пост является репостом или текстом
+      try {
+        var elementRoot = element.copy_history['0'].attachments['0'];
+        typeOfPost = elementRoot.type;
+        switch (typeOfPost) {
+          case 'video': link = elementRoot.video.photo_130; break;
+          case 'photo': link = elementRoot.photo.photo_130; break;
+          case 'doc': link = "imgs/doc.png"; break;
+          case 'link': link = elementRoot.link.photo.photo_130; break;
+          case 'audio': link = "imgs/audio.png"; break;
+          case 'note': link = "imgs/note.png"; break;
+          case 'poll': link = "imgs/poll.png"; break;
+          default: link = "imgs/unknow.png"; break;
+        }
+        isRepost = true;
+        //if(element.copy_history['0'].atachments.length != undefined) atachCount = element.copy_history['0'].atachments.length;
+      } catch (error) {
 
-      post = new Post(link, typeOfPost, postId, text,isRepost);
-      sortedPosts.push(post);
+        link = "txt.png";
+        console.log(error);  // 2 le catch is no cool
+      }
+    }
+
+    post = new Post(link, typeOfPost, postId, text, isRepost);
+    sortedPosts.push(post);
+   if(sort(sortRules,typeOfPost))
+   {
       createPost(post);
-      // console.log(post.postType + " " + post.getCssImg() + " " + post.id + " " + atachCount);
-      if (i == data.length - 1) {
-       //при последенем элементе задаем всем собития клика
-        $('.post').on('click', function () {
-          if(idOfCurrentUser > 0)
-          var openLink =  "http://vk.com/id" + idOfCurrentUser + "?w=wall" + idOfCurrentUser + '_' + this.getAttribute('id');
-          else
-          var openLink = "http://vk.com/wall"+idOfCurrentUser+"?own=1&w=wall"+idOfCurrentUser+"_" + this.getAttribute('id');
-          window.open(openLink, '_blank');
-          });
-        $(".post").on("contextmenu", function (event) {
+      displayedPosts++;
+   }
+    // console.log(post.postType + " " + post.getCssImg() + " " + post.id + " " + atachCount);
+    if (i == data.length - 1) {
+      //при последенем элементе задаем всем собития клика
+      $('#postCountDislpayed').html("On screen " + displayedPosts);
+      
+      $('.post').on('click', function () {
+        if (idOfCurrentUser > 0)
+          var openLink = "http://vk.com/id" + idOfCurrentUser + "?w=wall" + idOfCurrentUser + '_' + this.getAttribute('id');
+        else
+          var openLink = "http://vk.com/wall" + idOfCurrentUser + "?own=1&w=wall" + idOfCurrentUser + "_" + this.getAttribute('id');
+        window.open(openLink, '_blank');
+      });
+      $(".post").on("contextmenu", function (event) {
         var x = event.clientX;
         var y = event.clientY;
         var postContentWidth = parseInt($('#postContent').css("width"));
         var postContentLeft = $('#postContent').position().left;
-        
-        if(x > (postContentLeft + postContentWidth)/2)
-        {
-          showAltMenu(this,x - 75,y);
+
+        if (x > (postContentLeft + postContentWidth) / 2) {
+          showAltMenu(this, x - 75, y);
         }
-          if(x < (postContentLeft + postContentWidth)/2)
-        {
-          showAltMenu(this,x,y);
+        if (x < (postContentLeft + postContentWidth) / 2) {
+          showAltMenu(this, x, y);
         }
         console.log(x + "  " + y);
-        });
-      
-      if(i % 100 == 0)
-      {
-        setTimeout(function() {},1090);
+      });
+
+      if (i % 100 == 0) {
+        setTimeout(function () { }, 1090);
       }
     }
-    });
+  });
 }
 
 
@@ -255,11 +255,18 @@ function varInit() {
   $('#offset').val("offset");
   $('#count').val("count");
   $('#idOfUSer').val("user's id");
+  $("#tab2").hide();
+
+  $('.toTab').on('click',function() {
+    var tab = parseInt($(this).val());
+    openTab(tab);
+  });
+  $('#getID').on("click",function(){getID()});
 }
 
 function onOkInit() {
   varInit();
- getCountOfPosts('');
+  getCountOfPosts('');
   getUserId();
 
 }
@@ -331,4 +338,85 @@ function showAltMenu(item,x,y)
         $('body').on('mousedown',function () {
           $('altmenu').hide();
         });
+}
+
+function openTab(tabNum) {
+  var tabs = Array.from($(".tab"));
+  tabs.forEach(function(item,i,tabs) {
+    $(item).hide();
+  });
+  $('#tab'+tabNum).fadeIn(100);
+}
+
+function getID() {
+  var textbox = $('#url');
+  var searchType = $("[name=typeOfSearch]:checked").val();
+  var url = $('#url').val();
+  var id = url.split('/');
+  id= id[id.length-1];
+  
+  switch(searchType){
+    case 'user':getUserID(id); break;
+    case 'public':getPublicID(id) ;break;
+    default : alert("w");
+  }
+}
+
+ 
+  function getPublicID(_id) {
+    VK.api("groups.getById",{"group_ids":_id},function(data) {        
+      if(data.response)
+      {
+        var responseId = -(parseInt(data.response['0'].id)); 
+        $('#idOfUSer').val(responseId);
+      }
+      else{
+        $('#url').val("wrong Link");
+      }
+    });
+  }
+  function getUserID(_id) {
+    
+    VK.api("users.get",{"user_ids":_id},function(data) {
+      if(data.response)
+      {
+        var responseId = data.response['0'].id; 
+        $('#idOfUSer').val(responseId);
+      }
+      else{
+        $('#url').val("wrong Link");
+      }
+    });
+  }
+
+
+function getSortRules() {
+  var t_rules = Array.from($('#tab1 input:checked'));
+  var sortRules = new Array();
+  
+  t_rules.forEach(function(item,i,t_rules) {
+    sortRules.push(item.id);
+  });
+  return sortRules;
+}
+
+
+
+function sort(_sortRules,_typeOfPost) {
+  
+  var isSorted = 0;  
+  _sortRules.forEach(function(item,i,_sortRules) {
+    if(item == _typeOfPost)
+    {
+      isSorted++;
+    }
+  });
+  if(isSorted > 0)
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }
