@@ -15,7 +15,7 @@ var idOfCurrentUser = undefined;    //id пользователя
 var countOfAllPosts= 0;
 var displayedPosts = 0;
 
-function Post(image, _postType, postId, postText, _isRepost) {
+function Post(image, _postType, postId, postText, _isRepost,_postTime) {
   this.img = image;
   this.imgDir = "imgs/";
   this.isRepost = _isRepost;
@@ -34,6 +34,7 @@ function Post(image, _postType, postId, postText, _isRepost) {
   this.id = postId;
   this.DOMcontent = "";
   this.text = postText;
+  this.postTime = _postTime;
   this.setImg = function () {
     if (this.postType == undefined)           //если у поста нету картинок то берем картинку с локального хранилища.
       $('#' + this.id).css("background-image", this.imgDir + this.img);
@@ -61,7 +62,7 @@ $(window).ready(function () {
     if (isNaN(parseInt($("#idOfUSer").val())) != true) idOfCurrentUser = parseInt($("#idOfUSer").val()); else {idOfCurrentUser = ownerId;$("#idOfUSer").val("me");};
    
     getCountOfPosts(idOfCurrentUser);
-    setTimeout(getAllPosts,200,count, offset,idOfCurrentUser)
+    setTimeout(getAllPosts,300,count, offset,idOfCurrentUser)
    
     
   });
@@ -91,26 +92,40 @@ function getAllPosts(_count,_offset,_id) {
   
   var once = false;
   var offset = _offset;
-  var iteration = Math.ceil(getCount / 100) -1;
+  var iteration = Math.ceil(getCount / 100);
+  var maxIteration = iteration;
+   $('#progressbar').slideDown(200);
+   $('#progressbar').progressbar({"value": 0});
+     
   setTimeout(function _get() {
+    $('#progressbar').progressbar({"value":   map(iteration,1,maxIteration,100,1)});
+    
     if (getCount >= 100) { getCount = Math.abs(getCount - 100);} else { countInTimer = getCount; }
+    
     VK.api('wall.get', { 'owner_id':_id,'count': countInTimer, "offset": offset }, function (data) {
-      offset = parseInt(offset) + 100;
-      rawGetData.push(data.response.items);
-      console.log(rawGetData);
-      console.log(iteration);
-      if (iteration > 0) {
-        setTimeout(_get, 500);
-        iteration--;
+      if (data.response) {
+        offset = parseInt(offset) + 100;
+        rawGetData.push(data.response.items);
+        console.log(rawGetData);
+        console.log(iteration);
+        if (iteration > 0) {
+          setTimeout(_get, 500);
+          iteration--;
+        }
+        if (iteration == 0 && !once) { 
+          displayPosts(rawGetData); 
+          $('#wait').hide(); 
+          $('#progressbar').slideUp(300);
+          once = true; 
+          }
       }
-      if(iteration == 0 && !once) {displayPosts(rawGetData);$('#wait').hide();once = true;}
     });
   }, 500);
 }
 
 function displayPosts(rawData) {
   var t_data = Array.from(rawData);
-  console.log(typeof (t_data));
+  console.log(t_data);
   var data = new Array;
   t_data.forEach(function (item, i, t_data) {
     item.forEach(function (item, i, t_data) {
@@ -118,6 +133,8 @@ function displayPosts(rawData) {
     });
   });
 
+  var enabledTimeSorted = $('#timeSortingSwitcher').prop("checked");
+  
   $('#postCount').html("All posts: " + countOfAllPosts);
   data.forEach(function (element, i, data) {
 
@@ -130,7 +147,12 @@ function displayPosts(rawData) {
     var atachCount = undefined;
     var isRepost = false;
     var sortRules = getSortRules();
-
+    var postedTime = element.date;
+    var timeFrom = new Date($('#datepickerFrom').datepicker("getDate")).getTime() / 1000;
+    var timeTo = new Date($('#datepickerTo').datepicker("getDate")).getTime() / 1000; 
+     
+    var isAllPosts = $("#all input").prop("checked");
+ 
     try {       //обработка Своих Записей.
       typeOfPost = element.attachments['0'].type;
       elementContent = element.attachments['0'];
@@ -163,15 +185,17 @@ function displayPosts(rawData) {
         //if(element.copy_history['0'].atachments.length != undefined) atachCount = element.copy_history['0'].atachments.length;
       } catch (error) {
 
-        link = "txt.png";
+        link = "imgs/txt.png";
         console.log(error);  // 2 le catch is no cool
       }
     }
 
-    post = new Post(link, typeOfPost, postId, text, isRepost);
+    post = new Post(link, typeOfPost, postId, text, isRepost,postedTime);
     sortedPosts.push(post);
-   if(sort(sortRules,typeOfPost))
+    
+   if(sort(sortRules,typeOfPost,isAllPosts) && timeSorting(timeFrom,timeTo,postedTime,enabledTimeSorted))
    {
+     console.log(timeFrom + " " + postedTime + " " + timeTo + " " + enabledTimeSorted + " YES" + timeSorting(timeFrom,timeTo,postedTime,enabledTimeSorted));     
       createPost(post);
       displayedPosts++;
    }
@@ -212,7 +236,7 @@ function displayPosts(rawData) {
 
 
 function createPost(_Post) {
-  var createdPost = $('<div>').appendTo('#Posts').attr({ "class": "post", "id": _Post.id,"typeOfPost":_Post.postType,"isRepost": _Post.isRepost});
+  var createdPost = $('<div>').appendTo('#Posts').attr({ "class": "post", "id": _Post.id,"typeOfPost":_Post.postType,"isRepost": _Post.isRepost,"date":_Post.postTime});
   createdPost.css("background-image", _Post.getCssImg().toString());
   var postChild = $("<div>").appendTo(createdPost).attr({"id":"num"});
   postChild.html(_Post.id);
@@ -255,13 +279,26 @@ function varInit() {
   $('#offset').val("offset");
   $('#count').val("count");
   $('#idOfUSer').val("user's id");
-  $("#tab2").hide();
-
+  openTab(1);
   $('.toTab').on('click',function() {
     var tab = parseInt($(this).val());
     openTab(tab);
   });
   $('#getID').on("click",function(){getID()});
+  $( "#datepickerFrom" ).datepicker();
+  $( "#datepickerTo" ).datepicker();
+  $("#all input").on("click",function(){disableCheckboxs();});
+  $('#progressbar').progressbar();
+  $('#url,#count,#offset,#idOfUSer').click(function () {
+    $(this).select();
+  });
+ $('#postContent').scroll(function() {
+  if($("altmenu").is(":visible"))
+     {
+       $('altmenu').hide();
+     }
+     
+ });
 }
 
 function onOkInit() {
@@ -297,13 +334,14 @@ function getCountOfPosts(_id) {
 }
 
 function getUserId() {
-  VK.api('users.get', function (data) {
-    if (data.response != undefined) {
+  VK.api('users.get',{}, function (data) {
+    console.log(data);
+    if (data.response) {
       idOfCurrentUser = data.response['0'].uid;
       ownerId = idOfCurrentUser;
     }
     else {
-      getUserId();
+     setTimeout(function() { getUserId();},500);
     }
   });
 }
@@ -326,10 +364,15 @@ function changeIconSize(val) {
 function showAltMenu(item,x,y)
 {
          var postId = parseInt($(item).attr("id"));
+         var postTime = new Date();
+         postTime.setTime( parseInt($(item).attr("date")) * 1000);
           $('altmenu').hide();
           $('altmenu').css({"left":x,"top":y});
           $('#type').html("Type : "+ $(item).attr("typeofpost"));
           $('#repost').html("Repost? : "+ $(item).attr("isrepost"));
+       
+          $('#date').html("Date: "+ postTime.toLocaleDateString());//postTime.getDate()+"-"+(postTime.getMonth()+1)+"-"+postTime.getUTCFullYear());
+          
           $('altmenu').show(200);
           $(".element").unbind();
           $(".element").on('click', function () {
@@ -402,8 +445,10 @@ function getSortRules() {
 
 
 
-function sort(_sortRules,_typeOfPost) {
+function sort(_sortRules,_typeOfPost,all) {
   
+  if(all == true)
+  return true;
   var isSorted = 0;  
   _sortRules.forEach(function(item,i,_sortRules) {
     if(item == _typeOfPost)
@@ -419,4 +464,55 @@ function sort(_sortRules,_typeOfPost) {
   {
     return false;
   }
+}
+
+
+function timeSorting(_from, _to, _current, enabled) {
+
+  var from = _from;
+  var to = _to;
+  var current = _current;
+  var temp;
+     console.log(from + " " + current + " " + to + " " + enabled);
+
+  if (enabled == false)
+    return true;
+
+  if (from > to) {
+    temp = from;
+    from = to;
+    to = temp;
+  }
+  if (from < current && current < to) {
+     console.log(from + " " + current + " " + to + " " + enabled + " YES");
+    return true;
+  }
+  else {
+    console.log(from + " " + current + " " + to + " " + enabled + " No");
+    return false;
+  }
+}
+
+
+
+function disableCheckboxs() {
+  var enabled = $("#all input").prop("checked");
+  var switchers = Array.from($('.sort-switcher'));
+  if(enabled)
+  {
+    switchers.forEach(function(item,i,switchers) {
+      $(item).attr("disabled","disabled");
+    });
+  }
+  else
+  {
+    switchers.forEach(function(item,i,switchers) {
+      $(item).removeAttr("disabled");
+    });
+  }
+}
+
+function map(x, in_min, in_max, out_min, out_max)
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }

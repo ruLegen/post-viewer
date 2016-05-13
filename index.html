@@ -2,7 +2,10 @@
 	<head>
 		<meta http-equiv="Cache-Control" content="no-cache; charset= windows-1251">
 		<link rel="stylesheet" type="text/css" href="css/style.css">
-		<link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+		<link rel="stylesheet" href="css/jquery-ui.css">
+		<!link rel="stylesheet" href="css/jquery-ui.theme.css">
+		
+		
 		<script>
 			document.oncontextmenu = turnOff;
 			function turnOff() {return false;}
@@ -10,6 +13,7 @@
 		<script src="js/jquery.js"></script>
 		<script src="js/jquery-ui.js"></script>
 		<script src="//vk.com/js/api/xd_connection.js?2" type="text/javascript"></script>
+		<script src="js/localize-ru.js"></script>
 		<script src="js/main.js"></script>
 	</head>
 	<body>
@@ -24,15 +28,17 @@
 				<div class="tabContent" id="tabs">
 					<div class="switchers">
 						<button class="toTab" value="1">Sort</button>
-						<button class="toTab" value="2">getID</button>						
+						<button class="toTab" value="2">getID</button>
+						<button class="toTab" value="3">TimeSort</button>
 					</div>
 					<tab class="tab" id="tab1">
-						<label><input type="checkbox" id="photo" checked="checked"/>Photo </label>
-						<label><input type="checkbox" id="doc" checked="checked"/>Doc </label>
-						<label><input type="checkbox" id="video" checked="checked"/>Video </label>
-						<label><input type="checkbox" id="poll" checked="checked"/>Poll </label>
-						<label><input type="checkbox" id="text" checked="checked"/>Text </label>
-						<label><input type="checkbox" id="audio" checked="checked"/>Audio </label>
+						<label id="all"><input type="checkbox" checked="checked"/>All types</label>
+						<label id="photoLabel"> <input class="sort-switcher" disabled="disabled" type="checkbox" id="photo"/>Photo</label>
+						<label><input class="sort-switcher" disabled="disabled" type="checkbox" id="doc" />Doc </label>
+						<label><input class="sort-switcher" disabled="disabled" type="checkbox" id="video"/>Video </label>
+						<label><input class="sort-switcher" disabled="disabled" type="checkbox" id="poll" />Poll </label>
+						<label><input class="sort-switcher" disabled="disabled" type="checkbox" id="text" />Text </label>
+						<label><input class="sort-switcher" disabled="disabled" type="checkbox" id="audio"/>Audio </label>
 					</tab>
 					<tab class="tab" id="tab2">
 						<label><input type="radio" name="typeOfSearch" value="user" checked="checked" />User  </label>
@@ -40,7 +46,13 @@
 						<input id="url" value="url" size="15"/>
 						<button id="getID" >Get ID</button>
 					</tab>
-					
+					<tab class="tab" id="tab3">
+						<div class="datepicker">
+							<label>From <input id="datepickerFrom" size ="10"/> </label>
+							<label> To  <input id="datepickerTo" size ="10"/> </label>
+							<label> Enable <input type="checkbox" id="timeSortingSwitcher"></label>
+						</div>						
+					</tab>
 				</div>
 					
 			</div>
@@ -51,14 +63,16 @@
 		</div> -->
 		<div id="postContent">
 			<div id="wait" style="display:none">
-				<meter></meter>
+				
 			</div>
+			<div id="progressbar" style="display:none"></div>
 			<div id="Posts"></div>
 			
 		</div>
 		<altmenu>
 			<div class="element" id="type"></div>
 			<div class="element" id="repost"></div>
+			<div class="element" id="date"></div>
 		</altmenu>
 	</body>
 </html>
