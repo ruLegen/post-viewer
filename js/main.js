@@ -275,6 +275,7 @@ function varInit() {
 
   realMenuSize = ($('#leftMenu').width() / docWidth) * 100; //получаем ширину в процентах
   menuSlide(20);
+  disableDitePicker();  
   $('#postCount').html("All posts: "+countOfAllPosts);
   $('#offset').val("offset");
   $('#count').val("count");
@@ -297,8 +298,8 @@ function varInit() {
      {
        $('altmenu').hide();
      }
-     
- });
+   });
+  $("#timeSortingSwitcher").on("click",function() {disableDitePicker();});
 }
 
 function onOkInit() {
@@ -510,6 +511,20 @@ function disableCheckboxs() {
       $(item).removeAttr("disabled");
     });
   }
+}
+
+function disableDitePicker() {
+   var enabled = $('#timeSortingSwitcher').prop("checked");
+   if(enabled)
+   {
+     $('#datepickerFrom').removeAttr("disabled");
+     $('#datepickerTo').removeAttr("disabled");
+   }
+   else
+   {
+     $('#datepickerFrom').attr("disabled","disabled");
+     $('#datepickerTo').attr("disabled","disabled");
+   }
 }
 
 function map(x, in_min, in_max, out_min, out_max)
