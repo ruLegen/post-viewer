@@ -76,12 +76,14 @@ function getAllPosts(_count,_offset,_id) {
   {
    $('#wait').css("background-image","url('imgs/error.png')");
    $('#wait').show();
+   $('#start').removeAttr("disabled");
    err = false;
    return false;
   }
   else{
     $('#wait').css("background-image","url('imgs/wait.gif')");
     $('#wait').show();
+    $('#start').attr("disabled","disabled");
   }
   
   var countInTimer =0;
@@ -201,17 +203,18 @@ function displayPosts(rawData) {
    }
     // console.log(post.postType + " " + post.getCssImg() + " " + post.id + " " + atachCount);
     if (i == data.length - 1) {
-      //при последенем элементе задаем всем собития клика
-      $('#postCountDislpayed').html("On screen " + displayedPosts);
+      //при последенем элементе 
+      $('#start').removeAttr("disabled"); //открываем кнопку
+      $('#postCountDislpayed').html("On screen " + displayedPosts); //показываем сколько отобращилось
       
-      $('.post').on('click', function () {
+      $('.post').on('click', function () {  //задаем собития клика
         if (idOfCurrentUser > 0)
           var openLink = "http://vk.com/id" + idOfCurrentUser + "?w=wall" + idOfCurrentUser + '_' + this.getAttribute('id');
         else
           var openLink = "http://vk.com/wall" + idOfCurrentUser + "?own=1&w=wall" + idOfCurrentUser + "_" + this.getAttribute('id');
         window.open(openLink, '_blank');
-      });
-      $(".post").on("contextmenu", function (event) {
+      });  
+      $(".post").on("contextmenu", function (event) { //и ПКМ меню
         var x = event.clientX;
         var y = event.clientY;
         var postContentWidth = parseInt($('#postContent').css("width"));
@@ -235,7 +238,7 @@ function displayPosts(rawData) {
 
 
 
-function createPost(_Post) {
+function createPost(_Post) {    //отображает пост на экране
   var createdPost = $('<div>').appendTo('#Posts').attr({ "class": "post", "id": _Post.id,"typeOfPost":_Post.postType,"isRepost": _Post.isRepost,"date":_Post.postTime});
   createdPost.css("background-image", _Post.getCssImg().toString());
   var postChild = $("<div>").appendTo(createdPost).attr({"id":"num"});
